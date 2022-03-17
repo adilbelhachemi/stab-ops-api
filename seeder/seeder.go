@@ -30,13 +30,13 @@ func main() {
 			"first_name": "Jhon",
 			"last_name":  "Doe",
 			"position":   "technician",
-			"actions": []interface{}{
-				bson.D{
-					{"type", "setup"}, {"created_at", "1647455473"},
-				},
-				bson.D{
-					{"type", "start"}, {"created_at", "1647455473"},
-				},
+			"actions":    []interface{}{
+				//bson.D{
+				//	{"type", "setup"}, {"created_at", "1647455473"},
+				//},
+				//bson.D{
+				//	{"type", "start"}, {"created_at", "1647455473"},
+				//},
 			},
 		},
 	}

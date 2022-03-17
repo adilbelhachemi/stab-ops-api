@@ -87,6 +87,5 @@ func (r *mongoRepository) InsertOperators(ops []interface{}) {
 	}
 
 	fmt.Println()
-
 	fmt.Println(res)
 }

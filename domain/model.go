@@ -1,6 +1,9 @@
 package domain
 
-import "go.mongodb.org/mongo-driver/bson/primitive"
+import (
+	"go.mongodb.org/mongo-driver/bson/primitive"
+	"time"
+)
 
 type Operator struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id"`
@@ -11,6 +14,6 @@ type Operator struct {
 }
 
 type Action struct {
-	Type      string `json:"type" bson:"type"`
-	CreatedAt int64  `json:"created_at" bson:"created_at"`
+	Type      string    `json:"type" bson:"type"`
+	CreatedAt time.Time `json:"created_at" bson:"created_at"` // primitive.DateTime
 }

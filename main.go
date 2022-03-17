@@ -2,8 +2,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"github.com/joho/godotenv"
 	"log"
 	"net/http"
@@ -14,6 +12,7 @@ import (
 	mr "stablex/repository/mongodb"
 	"strconv"
 	"syscall"
+	"time"
 )
 
 func main() {
@@ -25,20 +24,20 @@ func main() {
 	repo := getRepo()
 	service := domain.NewOperatorService(repo)
 	handler := api.NewHandler(service)
+	appRouter := api.New(handler)
 
-	r := chi.NewRouter()
-	r.Use(middleware.RequestID)
-	r.Use(middleware.RealIP)
-	r.Use(middleware.Logger)
-	r.Use(middleware.Recoverer)
-
-	r.Get("/operators", handler.FindOperator)
-	r.Post("/actions/{id}", handler.InsertAction)
+	srv := &http.Server{
+		Addr:         httpPort(),
+		Handler:      appRouter,
+		IdleTimeout:  time.Minute,
+		ReadTimeout:  10 * time.Second,
+		WriteTimeout: 30 * time.Second,
+	}
 
 	errs := make(chan error, 2)
 	go func() {
 		fmt.Println("Listening on port :8000")
-		errs <- http.ListenAndServe(httpPort(), r)
+		errs <- srv.ListenAndServe()
 
 	}()
 
@@ -70,8 +69,3 @@ func getRepo() domain.OperatorRepository {
 	}
 	return repo
 }
-
-//var unixTime int64 = time.Now().UTC().Unix()
-//t := time.Unix(unixTime, 0)
-//strDate := t.Format(time.UnixDate)
-//fmt.Println(strDate)

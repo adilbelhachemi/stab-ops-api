@@ -15,12 +15,12 @@ type OperatorHandler interface {
 	InsertAction(http.ResponseWriter, *http.Request)
 }
 
-type handler struct {
+type Handler struct {
 	operatorService domain.OperatorService
 }
 
 func NewHandler(operatorService domain.OperatorService) OperatorHandler {
-	return &handler{operatorService: operatorService}
+	return &Handler{operatorService: operatorService}
 }
 
 func setupResponse(w http.ResponseWriter, input interface{}, statusCode int) {
@@ -34,9 +34,9 @@ func setupResponse(w http.ResponseWriter, input interface{}, statusCode int) {
 	return
 }
 
-func (h *handler) FindOperator(w http.ResponseWriter, r *http.Request) {}
+func (h *Handler) FindOperator(w http.ResponseWriter, r *http.Request) {}
 
-func (h *handler) InsertAction(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) InsertAction(w http.ResponseWriter, r *http.Request) {
 	// Declare a new Person struct.
 	var action domain.Action
 
@@ -56,7 +56,11 @@ func (h *handler) InsertAction(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	action.CreatedAt = time.Now().UTC().Unix()
+	location, err := time.LoadLocation("America/New_York")
+	if err != nil {
+		fmt.Println(err)
+	}
+	action.CreatedAt = time.Now().In(location) // time.Now().UTC().Unix()
 
 	h.operatorService.InsertAction(id, action)
 
