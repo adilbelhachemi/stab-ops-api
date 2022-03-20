@@ -7,6 +7,7 @@ import (
 	"os"
 	r "stablex/repository/mongodb"
 	"strconv"
+	"time"
 )
 
 func main() {
@@ -26,17 +27,30 @@ func main() {
 	}
 
 	docs := []interface{}{
+		//bson.M{
+		//	"first_name": "Jhon",
+		//	"last_name":  "Doe",
+		//	"position":   "technician",
+		//	"actions": []interface{}{
+		//		bson.D{
+		//			{"type", "setup"}, {"created_at", time.Now().UTC()},
+		//		},
+		//		bson.D{
+		//			{"type", "start"}, {"created_at", time.Now().UTC()},
+		//		},
+		//	},
+		//},
 		bson.M{
-			"first_name": "Jhon",
-			"last_name":  "Doe",
+			"first_name": "Mike",
+			"last_name":  "Foo",
 			"position":   "technician",
-			"actions":    []interface{}{
-				//bson.D{
-				//	{"type", "setup"}, {"created_at", "1647455473"},
-				//},
-				//bson.D{
-				//	{"type", "start"}, {"created_at", "1647455473"},
-				//},
+			"actions": []interface{}{
+				bson.D{
+					{"type", "setup"}, {"created_at", time.Now().UTC()},
+				},
+				bson.D{
+					{"type", "start"}, {"created_at", time.Now().AddDate(0, 1, 0).UTC()},
+				},
 			},
 		},
 	}

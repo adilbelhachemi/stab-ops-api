@@ -2,7 +2,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"log"
 	"net/http"
@@ -12,6 +11,7 @@ import (
 
 type OperatorHandler interface {
 	FindOperator(http.ResponseWriter, *http.Request)
+	GetOperators(http.ResponseWriter, *http.Request)
 	InsertAction(http.ResponseWriter, *http.Request)
 }
 
@@ -34,35 +34,51 @@ func setupResponse(w http.ResponseWriter, input interface{}, statusCode int) {
 	return
 }
 
-func (h *Handler) FindOperator(w http.ResponseWriter, r *http.Request) {}
-
-func (h *Handler) InsertAction(w http.ResponseWriter, r *http.Request) {
-	// Declare a new Person struct.
-	var action domain.Action
-
+func (h *Handler) FindOperator(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	fmt.Println("--- id: ", id)
-
 	if id == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	// Try to decode the request body into the struct. If there is an error,
-	// respond to the client with the error message and a 400 status code.
-	err := json.NewDecoder(r.Body).Decode(&action)
+	operator, err := h.operatorService.FindOperator(id, domain.OperatorFilter{})
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+	setupResponse(w, operator, 200)
+}
+
+func (h *Handler) GetOperators(w http.ResponseWriter, r *http.Request) {
+	var filter domain.OperatorFilter
+
+	err := json.NewDecoder(r.Body).Decode(&filter)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	location, err := time.LoadLocation("America/New_York")
-	if err != nil {
-		fmt.Println(err)
-	}
-	action.CreatedAt = time.Now().In(location) // time.Now().UTC().Unix()
+	res, _ := h.operatorService.GetOperators(filter)
+	setupResponse(w, res, 200)
+}
 
-	h.operatorService.InsertAction(id, action)
+func (h *Handler) InsertAction(w http.ResponseWriter, r *http.Request) {
+	var action domain.Action
+
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	err := json.NewDecoder(r.Body).Decode(&action)
+	if err != nil || action.Type == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	action.CreatedAt = time.Now().UTC()
+	_ = h.operatorService.InsertAction(id, action)
 
 	setupResponse(w, action, 200)
 }

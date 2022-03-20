@@ -14,6 +14,10 @@ func (s *operatorService) InsertAction(operatorId string, action Action) error {
 	return s.operatorRepo.InsertAction(operatorId, action)
 }
 
-func (s *operatorService) FindOperator(code string, opts string) (*Operator, error) {
+func (s *operatorService) FindOperator(code string, opts OperatorFilter) (*Operator, error) {
 	return s.operatorRepo.FindOperator(code, opts)
+}
+
+func (s *operatorService) GetOperators(opts OperatorFilter) ([]*Operator, error) {
+	return s.operatorRepo.GetOperators(opts)
 }

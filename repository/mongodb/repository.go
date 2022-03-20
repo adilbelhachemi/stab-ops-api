@@ -9,7 +9,9 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"log"
 	"stablex/domain"
+	"stablex/helper"
 	"time"
 )
 
@@ -46,6 +48,7 @@ func NewMongoRepository(mongoURL string, mongoDB string, mongoTimeout int) (doma
 	return repo, nil
 }
 
+// InsertAction - insert action
 func (r *mongoRepository) InsertAction(operatorId string, action domain.Action) error {
 
 	id, _ := primitive.ObjectIDFromHex(operatorId)
@@ -71,11 +74,72 @@ func (r *mongoRepository) InsertAction(operatorId string, action domain.Action) 
 	return nil
 }
 
-func (r *mongoRepository) FindOperator(operatorId string, opts string) (*domain.Operator, error) {
-	emp := &domain.Operator{}
-	return emp, nil
+// FindOperator - find operator
+func (r *mongoRepository) FindOperator(operatorId string, opts domain.OperatorFilter) (*domain.Operator, error) {
+	var operator *domain.Operator
+
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	id, _ := primitive.ObjectIDFromHex(operatorId)
+
+	collection := r.client.Database(r.database).Collection("operators")
+	err := collection.FindOne(ctx, bson.M{"_id": id}).Decode(&operator)
+	if err != nil {
+		log.Fatal(err)
+		return nil, err
+	}
+
+	return operator, nil
 }
 
+func (r *mongoRepository) GetOperators(opts domain.OperatorFilter) ([]*domain.Operator, error) {
+	var from time.Time
+	var to time.Time
+	var dateFilter = bson.M{}
+
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	collection := r.client.Database(r.database).Collection("operators")
+
+	if opts.Current {
+		from = helper.GetUTCDate(time.Now(), 0)
+		dateFilter["$gte"] = from
+
+		to = helper.GetUTCDate(from, 24)
+		dateFilter["$gte"] = to
+
+	} else {
+		if !opts.FromDate.IsZero() {
+			from = helper.GetUTCDate(opts.FromDate, 0)
+			dateFilter["$gte"] = from
+		}
+		if !opts.ToDate.IsZero() {
+			to = helper.GetUTCDate(opts.ToDate, 0)
+			dateFilter["$gte"] = to
+		}
+	}
+
+	filters := bson.M{"actions": bson.M{"$elemMatch": bson.M{"created_at": dateFilter}}}
+
+	cursor, err := collection.Find(ctx, filters)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	var ops []*domain.Operator
+	for cursor.Next(ctx) {
+		var opt *domain.Operator
+		if err := cursor.Decode(&opt); err != nil {
+			log.Fatal(err)
+		}
+		ops = append(ops, opt)
+	}
+	return ops, nil
+}
+
+// InsertOperators - seeder function
 func (r *mongoRepository) InsertOperators(ops []interface{}) {
 	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
 	defer cancel()

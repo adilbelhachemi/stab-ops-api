@@ -10,6 +10,7 @@ import (
 	"stablex/api"
 	"stablex/domain"
 	mr "stablex/repository/mongodb"
+	"stablex/router"
 	"strconv"
 	"syscall"
 	"time"
@@ -24,7 +25,7 @@ func main() {
 	repo := getRepo()
 	service := domain.NewOperatorService(repo)
 	handler := api.NewHandler(service)
-	appRouter := api.New(handler)
+	appRouter := router.New(handler)
 
 	srv := &http.Server{
 		Addr:         httpPort(),

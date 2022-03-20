@@ -17,3 +17,10 @@ type Action struct {
 	Type      string    `json:"type" bson:"type"`
 	CreatedAt time.Time `json:"created_at" bson:"created_at"` // primitive.DateTime
 }
+
+type OperatorFilter struct {
+	Action   string    `json:"action"`
+	FromDate time.Time `json:"from"`
+	ToDate   time.Time `json:"to"`
+	Current  bool      `json:"current"`
+}
