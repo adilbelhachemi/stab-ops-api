@@ -7,15 +7,28 @@ import (
 )
 
 func New(h api.OperatorHandler) *chi.Mux {
+
+	// login := auth.JWT{}.New()
+
 	r := chi.NewRouter()
 
 	r.Use(middleware.RequestID)
 	r.Use(middleware.RealIP)
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
+	// r.Use(login.Authenticator())
 
-	r.Get("/operators", h.GetOperators)
-	r.Get("/operators/{id}", h.FindOperator)
+	r.Group(func(mux chi.Router) {
+		// mux.Use(login.Authenticator())
+
+		r.Route("/operators", func(r chi.Router) {
+			r.Get("/", h.GetOperators)
+			r.Get("/{id}", h.FindOperator)
+			r.Post("/signin", h.Signin)
+			r.Post("/signup", h.Signup)
+		})
+	})
+
 	r.Post("/actions/{id}", h.InsertAction)
 
 	return r

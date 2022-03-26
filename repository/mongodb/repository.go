@@ -11,7 +11,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 	"log"
 	"stablex/domain"
-	"stablex/helper"
+	"stablex/domain/helper"
 	"time"
 )
 
@@ -137,6 +137,40 @@ func (r *mongoRepository) GetOperators(opts domain.OperatorFilter) ([]*domain.Op
 		ops = append(ops, opt)
 	}
 	return ops, nil
+}
+
+// InsertAction - insert action
+func (r *mongoRepository) UpdateOperator(operatorId string, opts domain.OperatorFilter) error {
+
+	id, _ := primitive.ObjectIDFromHex(operatorId)
+
+	fields := bson.M{}
+	if opts.Password != "" {
+		fields["password"] = opts.Password
+	}
+	if opts.Password != "" {
+		fields["position"] = opts.Position
+	}
+
+	update := bson.M{"$set": fields}
+
+	ctx, cancel := context.WithTimeout(context.Background(), r.timeout)
+	defer cancel()
+
+	collection := r.client.Database(r.database).Collection("operators")
+
+	res, err := collection.UpdateOne(
+		ctx,
+		bson.M{"_id": id},
+		update,
+	)
+	if err != nil {
+		return errors.Wrap(err, "repository.Operator.Insert")
+	}
+
+	fmt.Printf("updated %v doc\n", res.ModifiedCount)
+	fmt.Printf("----res/: %v", res)
+	return nil
 }
 
 // InsertOperators - seeder function

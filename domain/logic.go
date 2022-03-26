@@ -21,3 +21,7 @@ func (s *operatorService) FindOperator(code string, opts OperatorFilter) (*Opera
 func (s *operatorService) GetOperators(opts OperatorFilter) ([]*Operator, error) {
 	return s.operatorRepo.GetOperators(opts)
 }
+
+func (s *operatorService) UpdateOperator(id string, opts OperatorFilter) error {
+	return s.operatorRepo.UpdateOperator(id, opts)
+}

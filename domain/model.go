@@ -11,6 +11,7 @@ type Operator struct {
 	LastName  string             `json:"lastName,omitempty" bson:"last_name"`
 	Position  string             `json:"position,omitempty" bson:"position"`
 	Actions   []Action           `json:"actions" bson:"actions"`
+	Password  string             `json:"password,omitempty" bson:"password"`
 }
 
 type Action struct {
@@ -23,4 +24,11 @@ type OperatorFilter struct {
 	FromDate time.Time `json:"from"`
 	ToDate   time.Time `json:"to"`
 	Current  bool      `json:"current"`
+	Password string    `json:"password"`
+	Position string    `json:"position"`
+}
+
+type OperatorRequest struct {
+	ID       string `json:"id"`
+	Password string `json:"password"`
 }
