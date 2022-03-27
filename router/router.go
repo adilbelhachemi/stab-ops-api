@@ -24,6 +24,7 @@ func New(h api.OperatorHandler) *chi.Mux {
 		r.Route("/operators", func(r chi.Router) {
 			r.Get("/", h.GetOperators)
 			r.Get("/{id}", h.FindOperator)
+			r.Put("/{id}", h.UpdateOperator)
 			r.Post("/signin", h.Signin)
 			r.Post("/signup", h.Signup)
 		})

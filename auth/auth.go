@@ -5,17 +5,11 @@ import (
 	"golang.org/x/crypto/bcrypt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 )
 
-func CreateToken(id string) (string, error) {
+func CreateToken(userid string) (string, error) {
 	var err error
-
-	userid, err := strconv.ParseInt(id, 10, 64)
-	if err != nil {
-		return "", err
-	}
 
 	//Creating Access Token
 	atClaims := jwt.MapClaims{}

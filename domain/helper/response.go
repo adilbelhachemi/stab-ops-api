@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
-func SetupResponse(w http.ResponseWriter, input interface{}, statusCode int) {
+func Response(w http.ResponseWriter, input interface{}, statusCode int) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)
 	jsonResp, err := json.Marshal(input)

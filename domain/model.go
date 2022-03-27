@@ -9,7 +9,7 @@ type Operator struct {
 	ID        primitive.ObjectID `json:"id" bson:"_id"`
 	FirstName string             `json:"firstName,omitempty" bson:"first_name"`
 	LastName  string             `json:"lastName,omitempty" bson:"last_name"`
-	Position  string             `json:"position,omitempty" bson:"position"`
+	Role      string             `json:"role,omitempty" bson:"role"`
 	Actions   []Action           `json:"actions" bson:"actions"`
 	Password  string             `json:"password,omitempty" bson:"password"`
 }
@@ -20,15 +20,15 @@ type Action struct {
 }
 
 type OperatorFilter struct {
-	Action   string    `json:"action"`
-	FromDate time.Time `json:"from"`
-	ToDate   time.Time `json:"to"`
-	Current  bool      `json:"current"`
-	Password string    `json:"password"`
-	Position string    `json:"position"`
+	Action   string    `json:"action,omitempty"`
+	FromDate time.Time `json:"from,omitempty"`
+	ToDate   time.Time `json:"to,omitempty"`
+	Current  bool      `json:"current,omitempty"`
+	Password string    `json:"password,omitempty"`
+	Role     string    `json:"role,omitempty"`
 }
 
-type OperatorRequest struct {
+type OperatorSigninRequest struct {
 	ID       string `json:"id"`
 	Password string `json:"password"`
 }

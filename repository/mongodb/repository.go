@@ -139,17 +139,17 @@ func (r *mongoRepository) GetOperators(opts domain.OperatorFilter) ([]*domain.Op
 	return ops, nil
 }
 
-// InsertAction - insert action
-func (r *mongoRepository) UpdateOperator(operatorId string, opts domain.OperatorFilter) error {
-
+// UpdateOperator - update operator
+func (r *mongoRepository) UpdateOperator(operatorId string, opts domain.OperatorFilter) (*domain.Operator, error) {
+	var operator domain.Operator
 	id, _ := primitive.ObjectIDFromHex(operatorId)
 
 	fields := bson.M{}
 	if opts.Password != "" {
 		fields["password"] = opts.Password
 	}
-	if opts.Password != "" {
-		fields["position"] = opts.Position
+	if opts.Role != "" {
+		fields["role"] = opts.Role
 	}
 
 	update := bson.M{"$set": fields}
@@ -159,18 +159,27 @@ func (r *mongoRepository) UpdateOperator(operatorId string, opts domain.Operator
 
 	collection := r.client.Database(r.database).Collection("operators")
 
-	res, err := collection.UpdateOne(
+	after := options.After
+	opt := options.FindOneAndUpdateOptions{
+		ReturnDocument: &after,
+		Projection:     bson.D{{"actions", 0}},
+	}
+
+	res := collection.FindOneAndUpdate(
 		ctx,
 		bson.M{"_id": id},
 		update,
+		&opt,
 	)
-	if err != nil {
-		return errors.Wrap(err, "repository.Operator.Insert")
+	if res.Err() != nil {
+		return &operator, errors.Wrap(res.Err(), "repository.Operator.Update")
 	}
 
-	fmt.Printf("updated %v doc\n", res.ModifiedCount)
-	fmt.Printf("----res/: %v", res)
-	return nil
+	if err := res.Decode(&operator); err != nil {
+		return &operator, errors.Wrap(res.Err(), "repository.Operator.Update")
+	}
+
+	return &operator, nil
 }
 
 // InsertOperators - seeder function
