@@ -10,6 +10,7 @@ import (
 	"stablex/api"
 	"stablex/domain"
 	mr "stablex/repository/mongodb"
+	"stablex/repository/redis"
 	"stablex/router"
 	"strconv"
 	"syscall"
@@ -17,14 +18,22 @@ import (
 )
 
 func main() {
+	// load env
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatalf("Error loading .env file")
 	}
 
+	// setup repo & redis client
 	repo := getRepo()
+	rdb, err := redis.NewRedisRepository(os.Getenv("REDIS_URL"))
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// inject dependencies
 	service := domain.NewOperatorService(repo)
-	handler := api.NewHandler(service)
+	handler := api.NewHandler(service, rdb)
 	appRouter := router.New(handler)
 
 	srv := &http.Server{
@@ -49,7 +58,6 @@ func main() {
 	}()
 
 	fmt.Printf("Terminated %s", <-errs)
-
 }
 
 func httpPort() string {

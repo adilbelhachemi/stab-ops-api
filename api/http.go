@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"stablex/auth"
 	"stablex/domain"
-	"stablex/domain/helper"
+	"stablex/helper"
 	"time"
 )
 
@@ -24,14 +24,15 @@ type OperatorHandler interface {
 
 type Handler struct {
 	operatorService domain.OperatorService
+	authRepository  domain.AuthRepository
 }
 
-func NewHandler(operatorService domain.OperatorService) OperatorHandler {
-	return &Handler{operatorService: operatorService}
+func NewHandler(operatorService domain.OperatorService, authRepository domain.AuthRepository) OperatorHandler {
+	return &Handler{operatorService: operatorService, authRepository: authRepository}
 }
 
 func (h *Handler) Signin(w http.ResponseWriter, r *http.Request) {
-	opReq := getOperatorSigninRequest(w, r)
+	opReq := getOperatorFromRequest(w, r)
 	operator, err := h.operatorService.FindOperator(opReq.ID, domain.OperatorFilter{})
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -49,16 +50,28 @@ func (h *Handler) Signin(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, err := auth.CreateToken(opReq.ID)
+	ts, err := auth.CreateToken(opReq.ID)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
 		return
 	}
-	helper.SetCookieHandler(w, r, "jwt-token", token)
+
+	saveErr := h.authRepository.CreateAuth(opReq.ID, ts)
+	if saveErr != nil {
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+
+	tokens := map[string]string{
+		"access_token":  ts.AccessToken,
+		"refresh_token": ts.RefreshToken,
+	}
+	helper.SetCookieHandler(w, r, "access_token", tokens["access_token"])
+	helper.SetCookieHandler(w, r, "refresh_token", tokens["refresh_token"])
 }
 
 func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
-	opReq := getOperatorSigninRequest(w, r)
+	opReq := getOperatorFromRequest(w, r)
 	password := auth.GetHash([]byte(opReq.Password))
 
 	operator, err := h.operatorService.FindOperator(opReq.ID, domain.OperatorFilter{})
@@ -78,7 +91,7 @@ func (h *Handler) Signup(w http.ResponseWriter, r *http.Request) {
 	helper.Response(w, fmt.Sprintf("Operator %d updated successfully", opr.ID), http.StatusOK)
 }
 
-func getOperatorSigninRequest(w http.ResponseWriter, r *http.Request) domain.OperatorSigninRequest {
+func getOperatorFromRequest(w http.ResponseWriter, r *http.Request) domain.OperatorSigninRequest {
 	var opReq domain.OperatorSigninRequest
 
 	err := json.NewDecoder(r.Body).Decode(&opReq)
